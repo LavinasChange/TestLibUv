@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal
 {
-    internal class LibuvTransportContext
+    public class LibuvTransportContext
     {
         public LibuvTransportOptions Options { get; set; }
 

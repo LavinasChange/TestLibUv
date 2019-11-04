@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal
 {
-    internal class LibuvTransportFactory : IConnectionListenerFactory
+    public class LibuvTransportFactory : IConnectionListenerFactory
     {
         private readonly LibuvTransportContext _baseTransportContext;
 

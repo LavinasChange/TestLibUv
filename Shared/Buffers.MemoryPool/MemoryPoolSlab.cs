@@ -9,7 +9,7 @@ namespace System.Buffers
     /// Slab tracking object used by the byte buffer memory pool. A slab is a large allocation which is divided into smaller blocks. The
     /// individual blocks are then treated as independent array segments.
     /// </summary>
-    internal class MemoryPoolSlab : IDisposable
+    public class MemoryPoolSlab : IDisposable
     {
         /// <summary>
         /// This handle pins the managed array in memory until the slab is disposed. This prevents it from being

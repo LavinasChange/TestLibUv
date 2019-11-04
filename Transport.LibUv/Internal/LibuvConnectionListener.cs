@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal
 {
-    internal class LibuvConnectionListener : IConnectionListener
+    public class LibuvConnectionListener : IConnectionListener
     {
         private readonly List<ListenerContext> _listeners = new List<ListenerContext>();
         private IAsyncEnumerator<LibuvConnection> _acceptEnumerator;
@@ -127,7 +127,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal
 #endif
         }
 
-        internal async Task BindAsync()
+        public async Task BindAsync()
         {
             // TODO: Move thread management to LibuvTransportFactory
             // TODO: Split endpoint management from thread management

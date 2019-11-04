@@ -14,7 +14,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal
     /// <summary>
     /// Base class for listeners in Kestrel. Listens for incoming connections
     /// </summary>
-    internal class Listener : ListenerContext, IAsyncDisposable
+    public class Listener : ListenerContext, IAsyncDisposable
     {
         // REVIEW: This needs to be bounded and we need a strategy for what to do when the queue is full
         private bool _closed;

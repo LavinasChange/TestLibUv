@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal.Networking;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal
 {
-    internal class WriteReqPool
+    public class WriteReqPool
     {
         private const int _maxPooledWriteReqs = 1024;
 

@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal
 {
-    internal static class LibuvConstants
+    public static class LibuvConstants
     {
         public const int EOF = -4095;
         public static readonly int? ECONNRESET = GetECONNRESET();

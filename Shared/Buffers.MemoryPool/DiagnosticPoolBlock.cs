@@ -11,7 +11,7 @@ namespace System.Buffers
     /// Block tracking object used by the byte buffer memory pool. A slab is a large allocation which is divided into smaller blocks. The
     /// individual blocks are then treated as independent array segments.
     /// </summary>
-    internal sealed class DiagnosticPoolBlock : MemoryManager<byte>
+    public sealed class DiagnosticPoolBlock : MemoryManager<byte>
     {
         /// <summary>
         /// Back-reference to the memory pool which this block was allocated from. It may only be returned to this pool.

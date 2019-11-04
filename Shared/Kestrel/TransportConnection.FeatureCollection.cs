@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Connections.Features;
 
 namespace Microsoft.AspNetCore.Connections
 {
-    internal partial class TransportConnection : IConnectionIdFeature,
+    public partial class TransportConnection : IConnectionIdFeature,
                                                  IConnectionTransportFeature,
                                                  IConnectionItemsFeature,
                                                  IMemoryPoolFeature,

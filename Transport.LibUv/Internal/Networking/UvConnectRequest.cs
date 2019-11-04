@@ -9,7 +9,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal.Networkin
     /// <summary>
     /// Summary description for UvWriteRequest
     /// </summary>
-    internal class UvConnectRequest : UvRequest
+    public class UvConnectRequest : UvRequest
     {
         private readonly static LibuvFunctions.uv_connect_cb _uv_connect_cb = (req, status) => UvConnectCb(req, status);
 
