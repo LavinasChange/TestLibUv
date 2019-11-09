@@ -1,12 +1,62 @@
-﻿using Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal.Networking;
+﻿using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal.Networking;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Buffers;
+using System.IO.Pipelines;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace TestLibUV
 {
     class Program
     {
         public static LibuvFunctions libUv = new LibuvFunctions();
+
+        public static string ByteArrayToString(byte[] ba) => BitConverter.ToString(ba).Replace("-", "");
+
         static void Main(string[] args)
+        {
+            UvLoopHandle loopHandle = new UvLoopHandle(null);
+            loopHandle.Init(libUv);
+
+            Task.Run(async () =>
+            {
+                LibuvTransportContext transport = new LibuvTransportContext()
+                {
+                    Options = new LibuvTransportOptions(),
+                    AppLifetime = new ApplicationLifetime(null),
+                    Log = new LibuvTrace(LoggerFactory.Create(builder =>
+                    {
+                        builder.AddConsole();
+                    }).CreateLogger("core")),
+                };
+                LibuvConnectionListener listener = new LibuvConnectionListener(libUv, transport, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2593));
+                Console.WriteLine("Binding...");
+                await listener.BindAsync();
+
+                Console.WriteLine("Listening...");
+                ConnectionContext connectionContext = await listener.AcceptAsync();
+                Console.WriteLine("Accepted Connection from {0}", connectionContext.RemoteEndPoint);
+                PipeReader reader = connectionContext.Transport.Input;
+
+                while (true)
+                {
+                    ReadResult readResult = await reader.ReadAsync();
+                    if (readResult.Buffer.IsSingleSegment)
+                        Console.WriteLine(ByteArrayToString(readResult.Buffer.First.ToArray()));
+                    else foreach (var segment in readResult.Buffer)
+                        Console.WriteLine(ByteArrayToString(segment.ToArray()));
+                }
+            });
+
+            Console.ReadLine();
+        }
+
+        static void Main2(string[] args)
         {
             UvLoopHandle loopHandle = new UvLoopHandle(null);
             loopHandle.Init(libUv);
