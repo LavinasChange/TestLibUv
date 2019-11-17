@@ -79,7 +79,7 @@ namespace TestLibUV
         UvTimerHandle timerHandle = new UvTimerHandle(null);
         timerHandle.Init(uvThread.Loop, (callback, handle) =>
         {
-          Console.WriteLine("Closed");
+          Console.WriteLine("Closed ({0})", Thread.CurrentThread.ManagedThreadId);
         });
 
         Console.WriteLine("Timer Stuff {0}", Thread.CurrentThread.ManagedThreadId);
@@ -87,13 +87,13 @@ namespace TestLibUV
 
         void cb2(UvTimerHandle handle)
         {
-          Console.WriteLine("Called!2 {0}", DateTime.Now);
+          Console.WriteLine("Called!2 {0} ({1})", DateTime.Now, Thread.CurrentThread.ManagedThreadId);
           timerHandle.Start(cb2, 2000, 0);
         }
 
         void cb1(UvTimerHandle handle)
         {
-          Console.WriteLine("Called!1 {0}", DateTime.Now);
+          Console.WriteLine("Called!1 {0} ({1})", DateTime.Now, Thread.CurrentThread.ManagedThreadId);
           count--;
           if (count < 0)
             timerHandle.Start(cb2, 2000, 0);
