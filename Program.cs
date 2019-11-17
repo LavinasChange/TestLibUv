@@ -11,14 +11,68 @@ using System.IO.Pipelines;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace TestLibUV
 {
+  class NetState
+  {
+    public Task ReceiveTask { get; private set; }
+    public ConnectionContext Connection { get; private set; }
+
+    public NetState(ConnectionContext connection)
+    {
+      Connection = connection;
+
+      ReceiveTask = Task.Run(async () =>
+      {
+        Console.WriteLine("NetState reader... ({0})", Thread.CurrentThread.ManagedThreadId);
+        PipeReader reader = Connection.Transport.Input;
+
+        while (true)
+        {
+          ReadResult readResult = await reader.ReadAsync();
+          int packetId = readResult.Buffer.FirstSpan[0];
+          Console.WriteLine($"[0x{packetId:X}] Processing Packet");
+          int length = Program.PacketLengths[packetId];
+          int bodyLength = length - 1;
+          int bodyStart = 1;
+          if (length == 0)
+          {
+            length = BinaryPrimitives.ReadUInt16BigEndian(readResult.Buffer.FirstSpan.Slice(1, 2));
+            bodyLength = length - 3;
+            bodyStart = 3;
+          }
+          else if (length == 0xFFFF)
+          {
+            Console.WriteLine($"[0x{packetId:X}] Unknown Packet");
+            throw new Exception($"[0x{packetId:X}] Unknown Packet");
+          }
+          Console.WriteLine($"[0x{packetId:X}] Found length {length}");
+          // Console.WriteLine($"Packet Data: {Program.ByteArrayToString(readResult.Buffer.FirstSpan.ToArray()):X}");
+          Memory<byte> mem = new Memory<byte>(readResult.Buffer.FirstSpan.Slice(bodyStart, bodyLength).ToArray());
+          // Console.WriteLine($"[0x{packetId:X}] Buffer length {mem.Length}");
+          _ = Program.UvThread.PostAsync((Tuple<ConnectionContext, Memory<byte>> t) =>
+          {
+            // stuff
+            var (conn, mem) = t;
+            // Do stuff wtih memOwner.Memory.Span;
+            Console.WriteLine($"Packet ID: 0x{packetId:X} - Length: {length} - Data: 0x{Program.ByteArrayToString(mem.ToArray())}");
+          }, Tuple.Create(connection, mem));
+
+          reader.AdvanceTo(readResult.Buffer.GetPosition(length));
+        }
+      });
+    }
+  }
   class Program
   {
     public static LibuvFunctions libUv = new LibuvFunctions();
+    public static LibuvThread UvThread { get; private set; }
 
     public static string ByteArrayToString(byte[] ba) => BitConverter.ToString(ba).Replace("-", "");
+
+    public static List<NetState> NetStates { get; private set; }
 
     static void Main(string[] args)
     {
@@ -35,8 +89,8 @@ namespace TestLibUV
         }).CreateLogger("core"))
       };
 
-      LibuvThread uvThread = new LibuvThread(libUv, transport);
-      uvThread.StartAsync().Wait();
+      UvThread = new LibuvThread(libUv, transport);
+      UvThread.StartAsync().Wait();
 
       Task.Run(async () =>
       {
@@ -47,48 +101,19 @@ namespace TestLibUV
         await listener.BindAsync();
 
         Console.WriteLine("Listening... ({0})", Thread.CurrentThread.ManagedThreadId);
-        ConnectionContext connectionContext = await listener.AcceptAsync();
-        Console.WriteLine("Accepted Connection from {0}", connectionContext.RemoteEndPoint);
-        PipeReader reader = connectionContext.Transport.Input;
 
         while (true)
         {
-          ReadResult readResult = await reader.ReadAsync();
-          int packetId = readResult.Buffer.FirstSpan[0];
-          Console.WriteLine($"[0x{packetId:X}] Processing Packet");
-          int length = PacketLengths[packetId];
-          int bodyLength = length - 1;
-          int bodyStart = 1;
-          if (length == 0)
-          {
-            length = BinaryPrimitives.ReadUInt16BigEndian(readResult.Buffer.FirstSpan.Slice(1, 2));
-            bodyLength = length - 3;
-            bodyStart = 3;
-          }
-          else if (length == 0xFFFF)
-          {
-            Console.WriteLine($"[0x{packetId:X}] Unknown Packet");
-            throw new Exception($"[0x{packetId:X}] Unknown Packet");
-          }
-          Console.WriteLine($"[0x{packetId:X}] Found length {length}");
-          Console.WriteLine($"Packet Data: {ByteArrayToString(readResult.Buffer.FirstSpan.ToArray()):X}");
-          Memory<byte> mem = new Memory<byte>(readResult.Buffer.FirstSpan.Slice(bodyStart, bodyLength).ToArray());
-          Console.WriteLine($"[0x{packetId:X}] Buffer length {mem.Length}");
+          ConnectionContext connectionContext = await listener.AcceptAsync();
+          Console.WriteLine("Accepted Connection from {0}", connectionContext.RemoteEndPoint);
 
-          _ = uvThread.PostAsync((Tuple<ConnectionContext, Memory<byte>> t) =>
-          {
-            // stuff
-            var (conn, mem) = t;
-            // Do stuff wtih memOwner.Memory.Span;
-            Console.WriteLine($"Packet ID: 0x{packetId:X} - Length: {length} - Data: 0x{ByteArrayToString(mem.ToArray())}");
-          }, Tuple.Create(connectionContext, mem));
-
-          reader.AdvanceTo(readResult.Buffer.GetPosition(length));
+          NetStates.Add(new NetState(connectionContext));
+          Console.WriteLine("Total Clients {0}", NetStates.Count);
         }
       });
 
       // Manually putting something on the queue from another thread (or the main thread)
-      uvThread.PostAsync<object>(_ =>
+      UvThread.PostAsync<object>(_ =>
       {
         Console.WriteLine("Game: {0}", Thread.CurrentThread.ManagedThreadId);
       }, null);
