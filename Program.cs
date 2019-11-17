@@ -38,6 +38,7 @@ namespace TestLibUV
 
       Task.Run(async () =>
       {
+        Console.WriteLine("NIO: {0}", Thread.CurrentThread.ManagedThreadId);
         LibuvTransportContext transport = new LibuvTransportContext
         {
           Options = new LibuvTransportOptions(),
@@ -49,10 +50,10 @@ namespace TestLibUV
         };
 
         LibuvConnectionListener listener = new LibuvConnectionListener(libUv, transport, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2593));
-        Console.WriteLine("Binding...");
+        Console.WriteLine("Binding... ({0})", Thread.CurrentThread.ManagedThreadId);
         await listener.BindAsync();
 
-        Console.WriteLine("Listening...");
+        Console.WriteLine("Listening... ({0})", Thread.CurrentThread.ManagedThreadId);
         ConnectionContext connectionContext = await listener.AcceptAsync();
         Console.WriteLine("Accepted Connection from {0}", connectionContext.RemoteEndPoint);
         PipeReader reader = connectionContext.Transport.Input;
@@ -70,7 +71,7 @@ namespace TestLibUV
       // Manually putting something on the queue from another thread (or the main thread)
       uvThread.PostAsync<object>(_ =>
       {
-        Console.WriteLine("Stuff ({0})", Thread.CurrentThread.ManagedThreadId);
+        Console.WriteLine("Game: {0}", Thread.CurrentThread.ManagedThreadId);
       }, null);
 
       // Send an Initialization Request for Timers
