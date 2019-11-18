@@ -40,8 +40,6 @@ namespace Tela
       UvThread = new LibuvThread(libUv, transport);
       UvThread.StartAsync().Wait();
 
-      // UvTcpHandle uvHandle = new UvTcpHandle(new LibuvTrace(LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("serverHandle")));
-
       Task.Run(async () =>
       {
         Console.WriteLine("NIO: {0}", Thread.CurrentThread.ManagedThreadId);
@@ -51,7 +49,6 @@ namespace Tela
         await listener.BindAsync();
 
         Console.WriteLine("Listening... ({0})", Thread.CurrentThread.ManagedThreadId);
-        // LibuvConnection serverConnection = new LibuvConnection(uvHandle, new LibuvTrace(LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("serverConnection")), UvThread, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2593), new IPEndPoint(IPAddress.Parse("127.0.0.1"), 65432));
 
         while (true)
         {

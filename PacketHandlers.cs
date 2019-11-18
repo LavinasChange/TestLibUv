@@ -24,6 +24,20 @@ namespace Tela
     static void AccountLogin(NetState ns, PacketReader packet)
     {
       Console.WriteLine("Account Login 0x80");
+      PacketWriter writer = PacketWriter.CreateInstance();
+      writer.Write((byte)0xa8);
+      writer.Write((ushort)41);
+      writer.Write((byte)0x5D);
+      writer.Write((ushort)2);
+      writer.Write((byte)1);
+      writer.WriteAsciiFixed(" Test Center", 32);
+      writer.Write((byte)0);
+      writer.Write((byte)0);
+      writer.Write((byte)1);
+      writer.Write((byte)0);
+      writer.Write((byte)0);
+      writer.Write((byte)127);
+      ns.Send(writer.GetMemory());
     }
 
     static void LoginServerSeed(NetState ns, PacketReader packet)

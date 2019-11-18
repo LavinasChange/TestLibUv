@@ -68,7 +68,11 @@ namespace Tela
 
     public void Send(ReadOnlyMemory<byte> data)
     {
-      _ = Connection.Transport.Output.WriteAsync(data);
+      Task.Run(async () =>
+      {
+        await Connection.Transport.Output.WriteAsync(data);
+        await Connection.Transport.Output.FlushAsync();
+      });
     }
 
     public void Dispose()
